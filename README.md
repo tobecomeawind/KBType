@@ -1,10 +1,1 @@
-Hello
-World
-
-Whiigga
-
-
-For the branch
-
-
-I can refactor this code
+Это что такое бляха муха
