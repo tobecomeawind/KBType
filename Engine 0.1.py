@@ -5,17 +5,70 @@ from PyQt5 import Qt
 import time
 
 
+class MainWindow(QWidget):
 
+    def __init__(self):
 
-words_dict = [["bus", " ", "hello", " ", "terrible", " "], ["tortoise", " ", "umbrella", " "]]
+        super().__init__()
+
+        self.setWindowTitle('KBType')
+
+        self.setStyleSheet('background : grey')
+
+        self.__x = 1000
+        self.__y = 500
+
+        self.resize(self.__x, self.__y)
 
 class Text:
 
-    def _convert_to_lst(self, file): #подразумеывктся файл но пока тут список
+    def _convert_to_lst(self, file):
 
-        return file
+        result = list()
+
+        with open(file, 'r') as file:
+
+            lines = file.readlines()
+
+            intermediate_res = list()
+            
+            for i, line in enumerate(lines):
+
+                result.append(line.replace('\n', ''))
+                result.append(" ")
+
+        file.close()
+
+        return result
+
+
+class PropertyCSS:
+
+    def __set_name__(self, owner, name):
+
+        self.name = name
+
+    def __set__(self, instance, value):
+
+        instance.__dict__[self.name] = value
+
+        instance.propertiesCSS[self.name.replace("_", "-") if "_" in self.name else self.name] = value
+
+        instance.letter_label.setStyleSheet(self.transform_dict_to_css(instance))
+
+    def __get__(self, instance, owner):
+
+        return instance.__dict__[self.name]
+
+    def transform_dict_to_css(self, instance):
+
+        return ' '.join([f'{key}: {value};' for key, value in instance.propertiesCSS.items()]) 
 
 class Letter:
+
+    color     = PropertyCSS()
+    font      = PropertyCSS()
+    font_size = PropertyCSS()
 
     def __init__(self, data: str):
 
@@ -24,12 +77,13 @@ class Letter:
         self.next = None
         self.prev = None
 
-        self.color     = 'pink'
-        self.font      = None
-        self.font_size = None
-
         self.letter_label = QLabel(self.data)
-        self.letter_label.setStyleSheet('font-size: 50px')
+        self.propertiesCSS = dict()
+
+
+        self.color     = 'pink'
+        self.font      = 'Ubuntu'
+        self.font_size = '50px'
 
 
 class Word:
@@ -143,29 +197,13 @@ class LinkedSentence(Text):
         last_obj.next = obj
 
 
-class MainWindow(QWidget):
-
-    def __init__(self):
-
-        super().__init__()
-
-        self.setWindowTitle('KBType')
-
-        self.setStyleSheet('background : grey')
-
-        self.__x = 1000
-        self.__y = 800
-
-        self.resize(self.__x, self.__y)
-
-
 class Type_Line(MainWindow):
 
     def __init__(self):
 
         super().__init__()
 
-        self.sentences = LinkedSentence(words_dict)
+        self.sentences = LinkedSentence('level1.txt')
 
         self.current_sentence = self.sentences.head
         self.current_word     = self.current_sentence.head
@@ -217,9 +255,9 @@ class Type_Line(MainWindow):
 
                     if not self.current_word.next: self.__change_sentence(True)
 
-                    else: self.__change_word(True)
+                    else: self.__change_word(True, False)
 
-                else: self.__change_letter(True)
+                else: self.__change_letter(True, False)
 
 
     def __change_sentence(self, forward):
@@ -244,6 +282,7 @@ class Type_Line(MainWindow):
         if forward:
 
             self.current_word   = self.current_word.next
+            self.current_letter.color = 'green' if correctness else 'black'
             self.current_letter = self.current_word.head
 
             return
@@ -252,16 +291,21 @@ class Type_Line(MainWindow):
 
             self.current_word = self.current_word.prev
             self.current_letter = self.current_word.tail
+            self.current_letter.color = 'pink'
 
     def __change_letter(self, forward, correctness):
 
         if forward:
 
+            self.current_letter.color = 'green' if correctness else 'black'
             self.current_letter = self.current_letter.next
 
             return
 
-        if self.current_letter.prev: self.current_letter = self.current_letter.prev
+        if self.current_letter.prev:
+
+            self.current_letter = self.current_letter.prev
+            self.current_letter.color = 'pink'
 
     def paint_letters(self):
 
