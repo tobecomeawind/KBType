@@ -1,0 +1,84 @@
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel
+from PyQt5.QtCore import Qt, pyqtSignal
+import sys
+
+class Level(QWidget):
+    return_to_previous = pyqtSignal()
+
+    def __init__(self, text):
+        super().__init__()
+
+        self.setWindowTitle('KBType - Уровень')
+
+        layout = QVBoxLayout()
+
+        label = QLabel(text, self)
+        label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(label)
+
+        back_button = QPushButton("Вернуться", self)
+        back_button.clicked.connect(self.return_to_previous.emit)
+        layout.addWidget(back_button)
+
+        self.setLayout(layout)
+
+
+class LevelSelection(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle('KBType - Выбор уровня')
+
+        layout = QVBoxLayout()
+
+        title_label = QLabel("Выберите уровень:", self)
+        title_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title_label)
+
+
+        self.easy_button = QPushButton("Легкий", self)
+        self.easy_button.clicked.connect(self.start_easy_level)
+        layout.addWidget(self.easy_button)
+
+        self.normal_button = QPushButton("Нормальный", self)
+        self.normal_button.clicked.connect(self.start_normal_level)
+        layout.addWidget(self.normal_button)
+
+        self.hard_button = QPushButton("Сложный", self)
+        self.hard_button.clicked.connect(self.start_hard_level)
+        layout.addWidget(self.hard_button)
+
+        self.setLevelSelectionLayout(layout)
+
+    def setLevelSelectionLayout(self, layout):
+        self.setLayout(layout)
+
+    def return_to_level_selection(self):
+        self.level.close()
+        self.show()
+
+    def start_easy_level(self):
+        self.level = Level("Собака")
+        self.level.return_to_previous.connect(self.return_to_level_selection)
+        self.hide()
+        self.level.show()
+
+    def start_normal_level(self):
+        self.level = Level("Собака бежит")
+        self.level.return_to_previous.connect(self.return_to_level_selection)
+        self.hide()
+        self.level.show()
+
+    def start_hard_level(self):
+        self.level = Level("Собака бежит домой")
+        self.level.return_to_previous.connect(self.return_to_level_selection)
+        self.hide()
+        self.level.show()
+
+
+
+app = QApplication(sys.argv)
+window = LevelSelection()
+window.resize(600, 500)
+window.show()
+sys.exit(app.exec_())
