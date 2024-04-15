@@ -1,5 +1,6 @@
 import sys
 
+from sentenceGenerator import LinkedSentence
 
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QLabel, QHBoxLayout, QWidget, QDesktopWidget, QVBoxLayout, QStackedWidget
@@ -13,193 +14,11 @@ from matplotlib.figure import Figure
 
 import time
 
-class Text:
-
-    def _convert_to_lst(self, file):
-
-        result = list()
-
-        with open(file, 'r') as file:
-
-            lines = file.readlines()
-
-            intermediate_res = list()
-            
-            for i, line in enumerate(lines):
-
-                line = line.replace('\n', '').split()
-
-                [line.insert(i+1, " ") for i in range(0, len(line)+1, 2)]
-
-                result.append(line)
-
-        file.close()
-
-        return result
-
-
-class PropertyCSS:
-
-    def __set_name__(self, owner, name):
-
-        self.name = name
-
-    def __set__(self, instance, value):
-
-        instance.__dict__[self.name] = value
-
-        instance.propertiesCSS[self.name.replace("_", "-") if "_" in self.name else self.name] = value
-
-        instance.letter_label.setStyleSheet(self.transform_dict_to_css(instance))
-
-    def __get__(self, instance, owner):
-
-        return instance.__dict__[self.name]
-
-    def transform_dict_to_css(self, instance):
-
-        return ' '.join([f'{key}: {value};' for key, value in instance.propertiesCSS.items()]) 
-
-class Letter:
-
-    color     = PropertyCSS()
-    font      = PropertyCSS()
-    font_size = PropertyCSS()
-
-    def __init__(self, data: str):
-
-        self.data = data
-
-        self.next = None
-        self.prev = None
-
-        self.letter_label = QLabel(self.data)
-        self.propertiesCSS = dict()
-
-
-        self.color     = 'pink'
-        self.font      = 'Ubuntu'
-        self.font_size = '50px'
-
-
-class Word:
-
-    def __init__(self, word: str):
-
-        self.next = None
-        self.prev = None
-
-        self.head = None
-        self.tail = None
-
-        self.data = word
-
-        self.count_errors = 0
-
-        self.init_word()
-
-    def init_word(self): [self.__link(Letter(str_letter)) for str_letter in self.data]
-
-    def __link(self, obj: 'class Letter'):
-
-        if not self.head:
-
-            self.head = obj
-            self.tail = obj
-
-            return
-
-        current_obj = self.head
-
-        while current_obj:
-
-            last_obj = current_obj
-            current_obj = current_obj.next
-
-        last_obj.next = obj
-        obj.prev      = last_obj
-
-        self.tail = obj
-
-        return
-
-class Sentence:
-
-    def __init__(self, lst_sentence: list):
-
-        self.next = None
-
-        self.head = None
-        self.tail = None
-
-        self.lst_sentence = list(lst_sentence)
-
-        self.init_sentence()
-
-    def init_sentence(self): [self.__link(Word(str_word)) for str_word in self.lst_sentence]
-
-    def __link(self, obj: 'class Word'):
-
-        if not self.head:
-
-            self.head = obj
-            self.tail = obj
-
-            return
-
-        current_obj = self.head
-
-        while current_obj:
-
-            last_obj = current_obj
-            current_obj = current_obj.next
-
-        last_obj.next = obj
-        obj.prev      = last_obj
-
-        self.tail = obj
-
-        return
-
-    @property
-    def sentence(self): return "".join(self.lst_sentence)
-    
-
-class LinkedSentence(Text):
-
-    def __init__(self, file):
-
-        self.head = None
-
-        self.text = super()._convert_to_lst(file)
-
-        self.init_sentences()
-
-    def init_sentences(self): [self.__link(Sentence(lst_sentence)) for lst_sentence in self.text]
-
-    def __link(self, obj: 'class Sentence'):
-
-        if not self.head:
-
-            self.head = obj
-
-            return
-
-        current_obj = self.head
-
-        while current_obj:
-
-            last_obj = current_obj
-            current_obj = current_obj.next
-
-        last_obj.next = obj
-
-
 class GeneralWindow(QWidget):
 
-    def __init__(self):
+    def __init__(self, parent=None):
 
-        super().__init__()
+        super().__init__(parent)
 
         self.setWindowTitle('KBType')
 
@@ -210,34 +29,19 @@ class GeneralWindow(QWidget):
 
         self.resize(self.__x, self.__y)
 
-        self.stack_widgets = QStackedWidget()
 
-        self.typeLine = KeyboardGameWindow() #index 0
-
-        self.stack_widgets.addWidget(self.typeLine)
-
-        self.layout = QHBoxLayout()
-        self.layout.addWidget(self.stack_widgets)
-
-        self.setLayout(self.layout)
-
-        self.change_to_type_line()
-
-    def change_to_type_line(self):
-
-        self.stack_widgets.setCurrentIndex(0)
-
-
-class KeyboardGameWindow(QWidget):
+class KeyboardGameWindow(GeneralWindow):
 
     def __init__(self, parent=None):
 
         super().__init__(parent)
 
+        self.setStyleSheet('background : grey')
+
         self.stack_widgets = QStackedWidget()
 
         self.typeLine = TypeLineWindow() #index 0
-        self.plot     = PlotWindow([1,2,3], [1,2,3])
+        self.plot     = PlotWindow()
 
         self.stack_widgets.addWidget(self.typeLine)
         self.stack_widgets.addWidget(self.plot)
@@ -251,27 +55,33 @@ class KeyboardGameWindow(QWidget):
 
     def change_to_type_line(self):
 
+
         self.stack_widgets.setCurrentIndex(0)
         self.typeLine.setFocusPolicy(True)
+        print('changed to typeLine')
 
-    def change_to_plot(self):
 
+    def change_to_plot(self, x, y):
+
+        self.plot.change_data(x, y)
         self.stack_widgets.setCurrentIndex(1)
         self.plot.setFocusPolicy(True)
         print('changed to plot')
 
 
-class PlotWindow(QWidget):
+class PlotWindow(GeneralWindow):
 
-    def __init__(self, x, y, parent=None):
+    def __init__(self, parent=None):
 
         super().__init__(parent)
+
+        self.setStyleSheet('background : yellow')
 
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
-        self.x = x
-        self.y = y
+        self.x = [0]
+        self.y = [0]
 
         self.figure = Figure()
         self.ax     = self.figure.add_subplot()
@@ -281,12 +91,25 @@ class PlotWindow(QWidget):
 
         self.layout.addWidget(self.canvas)
 
+    def change_data(self, x, y):
 
-class TypeLineWindow(KeyboardGameWindow):
+        self.ax.clear()
+        self.ax.plot(x, y)
 
-    def __init__(self, parent=None):
+        self.canvas.draw()
 
-        super(KeyboardGameWindow, self).__init__(parent)
+    def keyPressEvent(self, event):
+
+        if event.key() == QtCore.Qt.Key_Space:
+
+            window.change_to_type_line()
+
+
+class TypeLineWindow(GeneralWindow):
+
+    def __init__(self):
+
+        super().__init__()
 
         self.sentences = LinkedSentence('level1.txt')
 
@@ -348,7 +171,7 @@ class TypeLineWindow(KeyboardGameWindow):
 
     def check_key(self, key):
 
-        print(key, self.current_letter.data)
+        # print(key, self.current_letter.data)
 
         print(f"{self.current_word.data} errors: " + str(self.current_word.count_errors))
         
@@ -380,7 +203,6 @@ class TypeLineWindow(KeyboardGameWindow):
 
                 else: self.__change_letter(True, False)
 
-
     def __change_sentence(self, forward):
 
         if forward:
@@ -398,9 +220,8 @@ class TypeLineWindow(KeyboardGameWindow):
             print("Игра окончена")
             self.game_status = False 
             self.timer.stop()
-            self.change_to_plot()
-            print(self.time_x)
-            print(self.wpm_y)
+            window.change_to_plot(self.time_x, self.wpm_y)
+            print(self.isVisible())
 
     def __change_word(self, forward, correctness):
 
@@ -459,6 +280,10 @@ class TypeLineWindow(KeyboardGameWindow):
         
             while point_letter:
 
+                if self.isVisible() == False:
+
+                    break
+
                 self.layout.addWidget(point_letter.letter_label)
 
                 point_letter = point_letter.next
@@ -473,7 +298,7 @@ class TypeLineWindow(KeyboardGameWindow):
                 if child.widget() is not None:
                     child.widget().deleteLater()
                 elif child.layout() is not None:
-                    clearLayout(child.layout())    
+                    self.clearLayout(child.layout())    
 
     def start_timer(self):
 
@@ -488,8 +313,37 @@ class TypeLineWindow(KeyboardGameWindow):
         self.wpm = round(self.correctly_words * 60 / self.current_time, 1) 
         self.wpm_y.append(self.wpm)
 
+    def showEvent(self, event):
+
+        super().showEvent(event)
+
+        self.clearLayout()
+
+        self.sentences = LinkedSentence('level1.txt')
+
+        self.current_sentence  = self.sentences.head
+        self.current_word      = self.current_sentence.head
+        self.current_letter    = self.current_word.head
+        self.current_event_key = None
+
+        self.correctly_words = 0
+        self.wpm = 0
+
+        self.game_status = False
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.get_time)
+        self.current_time = 0
+
+        self.wpm_y.clear()
+        self.time_x.clear()
+
+        self.start_layout()
+
+
 app = QApplication([])
-window = GeneralWindow()
+
+window = KeyboardGameWindow()
 
 
 window.show()
