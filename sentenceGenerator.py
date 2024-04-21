@@ -10,19 +10,26 @@ class Text:
 
             lines = file.readlines()
 
-            intermediate_res = list()
-            
-            for i, line in enumerate(lines):
+            for line in lines:
 
-                line = line.replace('\n', '').split()
+                intermediate_result = list()
+                
+                for word in line.split(' '):
 
-                [line.insert(i+1, " ") for i in range(0, len(line)+1, 2)]
+                    word = word.replace('\n', '')
 
-                result.append(line)
+                    if word != '\n':
+
+                        intermediate_result.append(word)
+                        intermediate_result.append(" ")
+
+                result.append(intermediate_result)
 
         file.close()
 
-        return result
+        self.count_letters = sum([sum([len(word) for word in line])for line in result])
+
+        return result, self.count_letters
 
 
 class PropertyCSS:
@@ -53,18 +60,21 @@ class Letter:
     font      = PropertyCSS()
     font_size = PropertyCSS()
 
-    def __init__(self, data: str):
+    def __init__(self, data: str, parent):
 
         self.data = data
 
         self.next = None
         self.prev = None
 
+        self.parent = parent
+        self.correct = False
+
         self.letter_label = QLabel(self.data)
         self.propertiesCSS = dict()
 
 
-        self.color     = 'pink'
+        self.color     = 'white'
         self.font      = 'Ubuntu'
         self.font_size = '50px'
 
@@ -81,11 +91,12 @@ class Word:
 
         self.data = word
 
-        self.count_errors = 0
+        self.count_errors  = 0
+        self.count_letters = len(self.data)
 
         self.init_word()
 
-    def init_word(self): [self.__link(Letter(str_letter)) for str_letter in self.data]
+    def init_word(self): [self.__link(Letter(str_letter, self)) for str_letter in self.data]
 
     def __link(self, obj: 'class Letter'):
 
@@ -110,6 +121,22 @@ class Word:
 
         return
 
+    def get_correctness(self):
+
+        cur = self.head
+        res = True
+
+        while cur:
+
+            if not cur.correct:
+
+                res = False
+                break
+
+            cur = cur.next
+
+        return res
+
 class Sentence:
 
     def __init__(self, lst_sentence: list):
@@ -120,6 +147,8 @@ class Sentence:
         self.tail = None
 
         self.lst_sentence = list(lst_sentence)
+
+        self.count_letters = sum([len(elem) for elem in self.lst_sentence])
 
         self.init_sentence()
 
@@ -158,7 +187,7 @@ class LinkedSentence(Text):
 
         self.head = None
 
-        self.text = super()._convert_to_lst(file)
+        self.text, self.len_letters = super()._convert_to_lst(file)
 
         self.init_sentences()
 
