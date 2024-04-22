@@ -76,7 +76,7 @@ class Letter:
 
         self.color     = 'white'
         self.font      = 'Ubuntu'
-        self.font_size = '50px'
+        self.font_size = '70px'
 
 
 class Word:
@@ -183,13 +183,9 @@ class Sentence:
 
 class LinkedSentence(Text):
 
-    def __init__(self, file):
+    def __init__(self):
 
         self.head = None
-
-        self.text, self.len_letters = super()._convert_to_lst(file)
-
-        self.init_sentences()
 
     def init_sentences(self): [self.__link(Sentence(lst_sentence)) for lst_sentence in self.text]
 
@@ -209,3 +205,11 @@ class LinkedSentence(Text):
             current_obj = current_obj.next
 
         last_obj.next = obj
+
+    def load(self, file):
+
+        self.text, self.len_letters = super()._convert_to_lst(file)
+
+        self.init_sentences()
+
+        return file
