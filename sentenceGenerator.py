@@ -1,8 +1,9 @@
-from PyQt5.QtWidgets import QLabel 
+from PyQt5.QtWidgets import QLabel
+from PyQt5 import QtCore 
 
 class Text:
 
-    def _convert_to_lst(self, file):
+    def _convert_to_lst(self, file, random):
 
         result = list()
 
@@ -56,9 +57,10 @@ class PropertyCSS:
 
 class Letter:
 
-    color     = PropertyCSS()
-    font      = PropertyCSS()
-    font_size = PropertyCSS()
+    color       = PropertyCSS()
+    font        = PropertyCSS()
+    font_size   = PropertyCSS()
+    font_family = PropertyCSS()
 
     def __init__(self, data: str, parent):
 
@@ -71,12 +73,14 @@ class Letter:
         self.correct = False
 
         self.letter_label = QLabel(self.data)
+        
         self.propertiesCSS = dict()
 
 
-        self.color     = 'white'
-        self.font      = 'Ubuntu'
-        self.font_size = '70px'
+        self.color       = 'white'
+        self.font        = 'Ubuntu'
+        self.font_size   = '70px'
+        self.font_family = 'Andale Mono, monospace'
 
 
 class Word:

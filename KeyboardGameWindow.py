@@ -4,7 +4,7 @@ from sentenceGenerator import LinkedSentence
 
 from PyQt5 import QtCore
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QLabel, QHBoxLayout, QWidget, QDesktopWidget, QVBoxLayout, QStackedWidget
+from PyQt5.QtWidgets import QApplication, QLabel, QHBoxLayout, QWidget, QDesktopWidget, QVBoxLayout, QStackedWidget, QLayout, QSizePolicy
 from PyQt5 import Qt
 from PyQt5.QtCore import QTimer 
 
@@ -15,6 +15,8 @@ import numpy as np
 from scipy import interpolate
 
 import time
+
+from MainWidget import GeneralWindow
 
 
 class GeneralWindow(QWidget):
@@ -27,27 +29,18 @@ class GeneralWindow(QWidget):
 
         self.setStyleSheet('background : black')
 
-        # self.__x = 1000
-        # self.__y = 600
-
-        # self.resize(self.__x, self.__y)
-
-        #self.resize(self.sizeHint())
-
-        # self.showFullScreen()
-
 
 class KeyboardGameWindow(GeneralWindow):
 
-    def __init__(self):
+    def __init__(self, parent_class=None, time=None, file=None, random=False):
 
         super().__init__()
 
-        self.setStyleSheet('background : black')
+        self.parent_class = parent_class
 
         self.stack_widgets = QStackedWidget()
 
-        self.typeLine = TypeLineWindow(self) #index 0
+        self.typeLine = TypeLineWindow(self, time, file, random) #index 0
         self.plot     = PlotWindow(self) 
 
         self.stack_widgets.addWidget(self.typeLine)
@@ -73,6 +66,10 @@ class KeyboardGameWindow(GeneralWindow):
         self.stack_widgets.setCurrentIndex(1)
         self.plot.setFocusPolicy(True)
         print('changed to plot')
+
+    def change_to_main(self):
+
+        self.parent_class.change_to_main()
 
     def load_file(self, file):
 
@@ -177,14 +174,14 @@ class PlotWindow(GeneralWindow):
 
 class TypeLineWindow(GeneralWindow):
 
-    def __init__(self, parent_class):
+    def __init__(self, parent_class, time=None, file=None, random=False):
 
         super().__init__()
 
         self.parent_class = parent_class
 
         self.sentences = LinkedSentence()
-        self.file = self.sentences.load('level1.txt')
+        self.file = self.sentences.load(file)
         
         self.current_sentence  = self.sentences.head
         self.current_word      = self.current_sentence.head
@@ -205,6 +202,7 @@ class TypeLineWindow(GeneralWindow):
         self.timer = QTimer()
         self.timer.timeout.connect(self.get_time)
         self.current_time = 0
+        self.total_time   = 0
 
         self.layout = QHBoxLayout()
         self.layout.setAlignment(QtCore.Qt.AlignCenter)
@@ -213,7 +211,59 @@ class TypeLineWindow(GeneralWindow):
         self.wpm_y  = list()
         self.time_x = list()
 
-        self.setLayout(self.layout)
+        self.game_with_time = self.__check_game_with_time(time)
+
+        self.main_layout = QHBoxLayout()
+        self.main_layout.setAlignment(QtCore.Qt.AlignCenter)
+
+        self.left_layout = QVBoxLayout()
+        self.left_layout.setAlignment(QtCore.Qt.AlignLeft)
+
+        self.center_layout = QVBoxLayout()
+        self.center_layout.setAlignment(QtCore.Qt.AlignCenter)
+
+        self.center_layout.addLayout(self.layout)
+
+        self.right_layout = QVBoxLayout()
+        self.right_layout.setAlignment(QtCore.Qt.AlignRight)
+
+        # label = QLabel('<-- |Backspace| <--')
+        # label.setStyleSheet('color: white; font-size: 20px; border: 1px solid red;')
+        # label.setAlignment(QtCore.Qt.AlignLeft)
+        # self.left_layout.addWidget(label)
+
+        self.main_layout.addLayout(self.left_layout)
+        self.main_layout.addLayout(self.center_layout)
+        self.main_layout.addLayout(self.right_layout)
+
+        self.setLayout(self.main_layout)
+
+        # if not self.game_with_time: self.setLayout(self.layout)
+
+    def __check_game_with_time(self, time):
+
+        if time and isinstance(time, (int, float)):
+
+            self.game_with_time = True
+            self.total_time     = time
+
+            self.vlayout = QVBoxLayout()
+            self.vlayout.setAlignment(QtCore.Qt.AlignCenter)
+            self.vlayout.setSpacing(0)
+
+            self.time_label = QLabel(str(self.current_time))
+            self.time_label.setStyleSheet('color: white; font-size: 40px')
+            self.time_label.setAlignment(QtCore.Qt.AlignCenter)
+
+            self.vlayout.addWidget(self.time_label)
+
+            self.vlayout.addLayout(self.layout)
+            self.setLayout(self.vlayout)
+
+            return True
+
+        return False
+
 
     def keyPressEvent(self, event):
 
@@ -227,6 +277,8 @@ class TypeLineWindow(GeneralWindow):
             case QtCore.Qt.Key_Backspace:
 
                 key = 'backspace'
+
+                if not self.game_status: self.parent_class.change_to_main()
 
             case QtCore.Qt.Key_Space:
 
@@ -312,10 +364,7 @@ class TypeLineWindow(GeneralWindow):
 
                 return
 
-            print("Игра окончена")
-            self.game_status = False 
-            self.timer.stop()
-            self.parent_class.change_to_plot(self)
+            self.stop_game()
 
     def __change_word(self, forward):
 
@@ -392,8 +441,8 @@ class TypeLineWindow(GeneralWindow):
                 child = self.layout.takeAt(0)
                 if child.widget() is not None:
                     child.widget().deleteLater()
-                elif child.layout() is not None:
-                    self.clearLayout(child.layout())    
+                # elif child.layout() is not None:
+                #     self.clearLayout(child.layout())    
 
     def start_timer(self):
 
@@ -411,6 +460,23 @@ class TypeLineWindow(GeneralWindow):
         if self.wpm >= 0: self.wpm_y.append(self.wpm)
 
         self.accuracy = 100 - round(((self.letter_bad*100 / self.len_letters)), 1)
+
+        if self.game_with_time:
+
+            self.time_label.setText(str(self.current_time))
+            
+            if self.current_time == self.total_time: 
+
+                self.time_label.setText(str(self.current_time))
+
+                self.stop_game()
+
+    def stop_game(self):
+
+        print("Игра окончена")
+        self.game_status = False 
+        self.timer.stop()
+        self.parent_class.change_to_plot(self)
 
     def showEvent(self, event):
 
@@ -439,6 +505,7 @@ class TypeLineWindow(GeneralWindow):
         self.timer = QTimer()
         self.timer.timeout.connect(self.get_time)
         self.current_time = 0
+        if self.game_with_time: self.time_label.setText(str(self.current_time))
 
         self.wpm_y.clear()
         self.time_x.clear()
@@ -451,10 +518,10 @@ class TypeLineWindow(GeneralWindow):
 # screen_rect = app.desktop().screenGeometry()
 # print(screen_rect.width(), screen_rect.height())
 
-# window = KeyboardGameWindow()
+# window = KeyboardGameWindow(file='level1.txt')
 
 
-# window.showFullScreen()
+# window.show()
 
 # app.exec_()
 
