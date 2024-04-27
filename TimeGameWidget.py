@@ -1,13 +1,14 @@
 from LanguageWidget import LanguageChanger
 from KeyboardGameWindow import KeyboardGameWindow
 from MainWidget import GeneralWindow
+from TimeChangerWidget import TimeChanger
 
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QStackedWidget, QHBoxLayout
 from PyQt5.QtCore import Qt
 from PyQt5 import QtCore
 
-class FreeGameWindow(GeneralWindow):
+class TimeGameWindow(GeneralWindow):
 
     def __init__(self, parent_class=None):
 
@@ -18,10 +19,12 @@ class FreeGameWindow(GeneralWindow):
         self.stack_widgets = QStackedWidget()
 
         self.typeline        = KeyboardGameWindow(self)
-        self.languageChanger = LanguageChanger(self) 
+        self.languageChanger = LanguageChanger(self)
+        self.timeChanger     = TimeChanger(self) 
 
         self.stack_widgets.addWidget(self.typeline)
         self.stack_widgets.addWidget(self.languageChanger)
+        self.stack_widgets.addWidget(self.timeChanger)
 
         self.layout = QHBoxLayout()
         self.layout.addWidget(self.stack_widgets)
@@ -40,20 +43,30 @@ class FreeGameWindow(GeneralWindow):
         self.stack_widgets.setCurrentIndex(1)
         self.languageChanger.setFocusPolicy(True)
 
+    def change_to_timeChanger(self):
+
+        self.stack_widgets.setCurrentIndex(2)
+        self.languageChanger.setFocusPolicy(True)
+
     def put_language(self, lang):
 
-        if lang=='eng': self.typeline.load_file(file='levels/eng/ELarge.txt', random=True)
+        self.lang = lang
+        self.change_to_timeChanger()
+    
+    def put_time(self, numb):
+
+        self.typeline.typeLine.check_game_with_time(numb)
+
+        if self.lang == 'eng': self.typeline.load_file(file='levels/eng/ELarge.txt', random=True)
         else:self.typeline.load_file(file='levels/ru/RLarge.txt', random=True)
-        self.stack_widgets.setCurrentIndex(0)
+
+        self.change_to_typeline()
 
     def change_to_main(self):
 
-        self.change_to_languageChanger()
+        self.change_to_timeChanger()
 
     def change_to_parent_class(self):
  
         self.parent_class.change_to_main()
-
-
-
 

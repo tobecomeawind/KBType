@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QLabel
 from PyQt5 import QtCore 
+from random import choice
 
 class Text:
 
@@ -11,26 +12,54 @@ class Text:
 
             lines = file.readlines()
 
-            for line in lines:
+            if random:
+
+                print("---Random words created---")
+
+                counter = 0
 
                 intermediate_result = list()
                 
-                for word in line.split(' '):
+                for _ in range(100):
 
-                    word = word.replace('\n', '')
+                    intermediate_result.append(choice(lines).replace('\n', ''))
+                    intermediate_result.append(" ")
 
-                    if word != '\n':
+                    if counter == 2:
 
-                        intermediate_result.append(word)
-                        intermediate_result.append(" ")
+                        result.append(intermediate_result.copy())
 
-                result.append(intermediate_result)
+                        intermediate_result.clear()
+
+                        counter = 0
+                        continue 
+
+                    counter += 1 
+
+            else:
+
+                print("---Word created---")
+
+                for line in lines:
+
+                    intermediate_result = list()
+                    
+                    for word in line.split(' '):
+
+                        word = word.replace('\n', '')
+
+                        if word != '\n':
+
+                            intermediate_result.append(word)
+                            intermediate_result.append(" ")
+
+                    result.append(intermediate_result)
 
         file.close()
 
-        self.count_letters = sum([sum([len(word) for word in line])for line in result])
+        count_letters = sum([sum([len(word) for word in line])for line in result])
 
-        return result, self.count_letters
+        return result, count_letters
 
 
 class PropertyCSS:
@@ -57,10 +86,11 @@ class PropertyCSS:
 
 class Letter:
 
-    color       = PropertyCSS()
-    font        = PropertyCSS()
-    font_size   = PropertyCSS()
-    font_family = PropertyCSS()
+    color                 = PropertyCSS()
+    font                  = PropertyCSS()
+    font_size             = PropertyCSS()
+    font_family           = PropertyCSS()
+    text_decoration       = PropertyCSS()
 
     def __init__(self, data: str, parent):
 
@@ -72,15 +102,24 @@ class Letter:
         self.parent = parent
         self.correct = False
 
-        self.letter_label = QLabel(self.data)
+        self._letter_label = QLabel(self.data)
         
         self.propertiesCSS = dict()
-
 
         self.color       = 'white'
         self.font        = 'Ubuntu'
         self.font_size   = '70px'
         self.font_family = 'Andale Mono, monospace'
+        self.text_decoration = 'none'
+
+    @property
+    def letter_label(self): return self._letter_label
+
+    @letter_label.setter
+    def letter_label(self, value): self._letter_label = value
+
+    @letter_label.deleter
+    def letter_label(self): pass
 
 
 class Word:
@@ -191,6 +230,8 @@ class LinkedSentence(Text):
 
         self.head = None
 
+        self.len_letters = 0
+
     def init_sentences(self): [self.__link(Sentence(lst_sentence)) for lst_sentence in self.text]
 
     def __link(self, obj: 'class Sentence'):
@@ -210,10 +251,14 @@ class LinkedSentence(Text):
 
         last_obj.next = obj
 
-    def load(self, file):
+    def load(self, file, random):
 
-        self.text, self.len_letters = super()._convert_to_lst(file)
+        if file:
 
-        self.init_sentences()
+            self.text, count_letters = super()._convert_to_lst(file, random)
 
-        return file
+            self.init_sentences()
+
+            return file, count_letters
+
+        return None, None

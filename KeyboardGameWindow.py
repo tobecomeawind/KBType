@@ -40,8 +40,11 @@ class KeyboardGameWindow(GeneralWindow):
 
         self.stack_widgets = QStackedWidget()
 
-        self.typeLine = TypeLineWindow(self, time, file, random) #index 0
-        self.plot     = PlotWindow(self) 
+        self.typeLine = TypeLineWindow(self, time, file, random)
+
+        self.time = time
+
+        self.plot = PlotWindow(self) 
 
         self.stack_widgets.addWidget(self.typeLine)
         self.stack_widgets.addWidget(self.plot)
@@ -55,6 +58,7 @@ class KeyboardGameWindow(GeneralWindow):
 
     def change_to_type_line(self):
 
+        self.typeLine.check_game_with_time(self.time)
         self.stack_widgets.setCurrentIndex(0)
         self.typeLine.setFocusPolicy(True)
         print('changed to typeLine')
@@ -71,10 +75,18 @@ class KeyboardGameWindow(GeneralWindow):
 
         self.parent_class.change_to_main()
 
-    def load_file(self, file):
+    def load_file(self, file, random=False):
 
-        self.typeLine.sentences.load(file)
-        self.typeLine.file = file
+        file, count_letters = self.typeLine.sentences.load(file, random)
+        self.typeLine.file        = file
+        self.typeLine.random      = random
+        self.typeLine.len_letters = count_letters
+
+    def showEvent(self, event):
+        
+        super().showEvent(event)
+
+        self.change_to_type_line()
 
 
 class PlotWindow(GeneralWindow):
@@ -110,7 +122,7 @@ class PlotWindow(GeneralWindow):
         self.x    = np.array(typeline.time_x)
         self.y    = np.array(typeline.wpm_y)
         self.acc  = typeline.accuracy
-        self.cor  = typeline.len_letters - typeline.letter_bad
+        self.cor  = typeline.letter_good if typeline.letter_good > 0 else typeline.len_letters - typeline.letter_bad
         self.inc  = typeline.letter_bad
         self.time = typeline.current_time
         self.wpm  = typeline.wpm
@@ -134,7 +146,7 @@ class PlotWindow(GeneralWindow):
         self.figure.text(0.06, 0.6, f'RAW: {self.raw}', fontsize=25, color='white', ha='left', va='center')
         self.figure.text(0.085, 0.57, f'(if all correct)', fontsize=10, color='white', ha='left', va='center')
         self.figure.text(0.01, 0.2, f'Press |Space| to restart...', fontsize=20, color='white', ha='left', va='center')
-        self.figure.text(0.01, 0.02, f'<-- |Backspace| <--', fontsize=10, color='white', ha='left', va='center')
+        self.figure.text(0.01, 0.02, f'<-- |Esc| <--', fontsize=10, color='white', ha='left', va='center')
 
         self.ax.grid(True, which='both', linestyle='dashed', color='gray', zorder=0.5)
         
@@ -168,8 +180,12 @@ class PlotWindow(GeneralWindow):
 
         elif event.key() ==  QtCore.Qt.Key_Escape:
 
-            self.parent_class.destroy()
-            
+            self.parent_class.change_to_main()
+        
+        elif event.key() == QtCore.Qt.Key_Backspace:
+
+            self.parent_class.change_to_main()
+
             return
 
 class TypeLineWindow(GeneralWindow):
@@ -178,15 +194,21 @@ class TypeLineWindow(GeneralWindow):
 
         super().__init__()
 
+        print(time)
+
         self.parent_class = parent_class
 
         self.sentences = LinkedSentence()
-        self.file = self.sentences.load(file)
+        self.file, self.len_letters = self.sentences.load(file, random)
+        self.random = random
         
-        self.current_sentence  = self.sentences.head
-        self.current_word      = self.current_sentence.head
-        self.current_letter    = self.current_word.head
-        self.current_event_key = None
+        if file:
+
+            self.current_sentence  = self.sentences.head
+            self.current_word      = self.current_sentence.head
+            self.current_letter    = self.current_word.head
+            self.current_event_key = None
+
 
         self.correctly_words = 0
         self.total_words     = 0
@@ -194,9 +216,9 @@ class TypeLineWindow(GeneralWindow):
         self.wpm = 0
         self.accuracy = 0
 
+        self.letter_good = 0
         self.letter_bad  = 0
-        self.len_letters = self.sentences.len_letters 
-
+        
         self.game_status = False
 
         self.timer = QTimer()
@@ -211,8 +233,6 @@ class TypeLineWindow(GeneralWindow):
         self.wpm_y  = list()
         self.time_x = list()
 
-        self.game_with_time = self.__check_game_with_time(time)
-
         self.main_layout = QHBoxLayout()
         self.main_layout.setAlignment(QtCore.Qt.AlignCenter)
 
@@ -221,16 +241,14 @@ class TypeLineWindow(GeneralWindow):
 
         self.center_layout = QVBoxLayout()
         self.center_layout.setAlignment(QtCore.Qt.AlignCenter)
+        
+        self.game_with_time = False 
+        self.game_with_time = self.check_game_with_time(time)
 
         self.center_layout.addLayout(self.layout)
 
         self.right_layout = QVBoxLayout()
         self.right_layout.setAlignment(QtCore.Qt.AlignRight)
-
-        # label = QLabel('<-- |Backspace| <--')
-        # label.setStyleSheet('color: white; font-size: 20px; border: 1px solid red;')
-        # label.setAlignment(QtCore.Qt.AlignLeft)
-        # self.left_layout.addWidget(label)
 
         self.main_layout.addLayout(self.left_layout)
         self.main_layout.addLayout(self.center_layout)
@@ -238,29 +256,22 @@ class TypeLineWindow(GeneralWindow):
 
         self.setLayout(self.main_layout)
 
-        # if not self.game_with_time: self.setLayout(self.layout)
+    def check_game_with_time(self, time):
 
-    def __check_game_with_time(self, time):
+        if not self.game_with_time:
 
-        if time and isinstance(time, (int, float)):
+            if time and isinstance(time, (int, float)):
 
-            self.game_with_time = True
-            self.total_time     = time
+                self.game_with_time = True
+                self.total_time     = time
 
-            self.vlayout = QVBoxLayout()
-            self.vlayout.setAlignment(QtCore.Qt.AlignCenter)
-            self.vlayout.setSpacing(0)
+                self.time_label = QLabel(str(self.current_time))
+                self.time_label.setStyleSheet('color: white; font-size: 40px')
+                self.time_label.setAlignment(QtCore.Qt.AlignCenter)
 
-            self.time_label = QLabel(str(self.current_time))
-            self.time_label.setStyleSheet('color: white; font-size: 40px')
-            self.time_label.setAlignment(QtCore.Qt.AlignCenter)
+                self.center_layout.addWidget(self.time_label)
 
-            self.vlayout.addWidget(self.time_label)
-
-            self.vlayout.addLayout(self.layout)
-            self.setLayout(self.vlayout)
-
-            return True
+                return True
 
         return False
 
@@ -292,7 +303,7 @@ class TypeLineWindow(GeneralWindow):
 
             case QtCore.Qt.Key_Escape:
 
-                self.parent_class.destroy()
+                self.parent_class.change_to_main()
 
                 return
 
@@ -307,8 +318,6 @@ class TypeLineWindow(GeneralWindow):
             self.check_key(key)
 
     def check_key(self, key):
-
-        # print(key, self.current_letter.data)
 
         print(f"word: {self.current_letter.parent.data} errors: " + str(self.current_word.count_errors))
 
@@ -384,15 +393,20 @@ class TypeLineWindow(GeneralWindow):
             self.current_word   = self.current_word.prev
             self.current_letter = self.current_word.tail
             self.current_letter.color = 'white'
+            self.current_letter.text_decoration = 'none'
 
     def __change_letter(self, forward, correctness):
 
         if forward:
 
-            if correctness: self.current_letter.correct = True
+            if correctness:
+                self.current_letter.correct = True
+                self.letter_good += 1
             else: self.letter_bad += 1
             
-            self.current_letter.color = 'grey' if correctness else 'yellow'
+            if correctness:self.current_letter.color = 'grey'
+            else: self.current_letter.text_decoration = 'line-through'
+
             self.current_letter = self.current_letter.next
 
             return
@@ -402,6 +416,7 @@ class TypeLineWindow(GeneralWindow):
             self.current_letter.correct = False
             self.current_letter = self.current_letter.prev
             self.current_letter.color = 'white'
+            self.current_letter.text_decoration = 'none'
 
     def start_typing(self):
 
@@ -440,9 +455,7 @@ class TypeLineWindow(GeneralWindow):
             while self.layout.count():
                 child = self.layout.takeAt(0)
                 if child.widget() is not None:
-                    child.widget().deleteLater()
-                # elif child.layout() is not None:
-                #     self.clearLayout(child.layout())    
+                    child.widget().deleteLater()  
 
     def start_timer(self):
 
@@ -459,18 +472,29 @@ class TypeLineWindow(GeneralWindow):
         
         if self.wpm >= 0: self.wpm_y.append(self.wpm)
 
-        self.accuracy = 100 - round(((self.letter_bad*100 / self.len_letters)), 1)
 
         if self.game_with_time:
 
             self.time_label.setText(str(self.current_time))
+
+            try:
             
+                self.accuracy = 100 - round(((self.letter_bad*100 / self.letter_good)), 1)
+
+            except: 
+
+                pass
+            
+            self.accuracy = self.accuracy if self.accuracy > 0 else 0 
+
             if self.current_time == self.total_time: 
 
                 self.time_label.setText(str(self.current_time))
 
                 self.stop_game()
 
+        self.accuracy = 100 - round(((self.letter_bad*100 / self.len_letters)), 1)
+    
     def stop_game(self):
 
         print("Игра окончена")
@@ -482,10 +506,14 @@ class TypeLineWindow(GeneralWindow):
 
         super().showEvent(event)
 
+        print("---Show Event---")
+
         self.clearLayout()
 
+        print(self.random)
+
         self.sentences = LinkedSentence()
-        self.sentences.load(self.file)
+        self.file, self.len_letters = self.sentences.load(self.file, self.random)
 
         self.current_sentence  = self.sentences.head
         self.current_word      = self.current_sentence.head
@@ -499,12 +527,14 @@ class TypeLineWindow(GeneralWindow):
         self.raw = 0
 
         self.letter_bad  = 0
+        self.letter_good = 0
 
         self.game_status = False
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.get_time)
         self.current_time = 0
+
         if self.game_with_time: self.time_label.setText(str(self.current_time))
 
         self.wpm_y.clear()
@@ -518,7 +548,7 @@ class TypeLineWindow(GeneralWindow):
 # screen_rect = app.desktop().screenGeometry()
 # print(screen_rect.width(), screen_rect.height())
 
-# window = KeyboardGameWindow(file='level1.txt')
+# window = KeyboardGameWindow(time=4, file='level1.txt')
 
 
 # window.show()

@@ -59,7 +59,7 @@ class WelcomeWindow(GeneralWindow):
         self.logo_label.setPixmap(self.logo_image)
         self.logo_label.setAlignment(Qt.AlignCenter)
     
-        self.label = QLabel("...Press 'Space' to continue...")
+        self.label = QLabel("...Press | Space | to continue...")
         self.label.setStyleSheet('color: white; font-size: 40px; font-family: Courier New, monospace')
         self.label.setAlignment(Qt.AlignCenter)
 

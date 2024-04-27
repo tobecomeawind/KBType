@@ -30,7 +30,7 @@ class LanguageChanger(GeneralWindow):
         self.eng.setIcon(QtGui.QIcon('images/eng.png'))
         self.eng.setIconSize(QtCore.QSize(200,200))
         self.eng.clicked.connect(self.press_english)
-        
+
         self.ru = QPushButton("Russian")
         self.ru.setStyleSheet('color:white;font-size: 60px;border-radius: 8px;')
         self.ru.setIcon(QtGui.QIcon('images/rus.png'))
@@ -48,4 +48,17 @@ class LanguageChanger(GeneralWindow):
 
         self.parent_class.put_language('ru')
 
+    def keyPressEvent(self, event):
+
+        if event.text() == '1':
+
+            self.press_english()
+
+        if event.text() == '2':
+
+            self.press_russian()
+
+        if event.key() == QtCore.Qt.Key_Escape:
+
+            self.parent_class.change_to_parent_class()
 

@@ -5,6 +5,7 @@ from PyQt5 import QtCore
 
 from MainWidget import GeneralWindow
 from FreeGameWidget import FreeGameWindow
+from TimeGameWidget import TimeGameWindow
 
 class Buttons(GeneralWindow):
 
@@ -19,7 +20,6 @@ class Buttons(GeneralWindow):
         self.add_buttons()
 
         self.setLayout(self.layout)
-        self.setWindowTitle("Main Window")
 
     def add_buttons(self):
 
@@ -57,18 +57,20 @@ class ModeChangerWindow(GeneralWindow):
 
         self.buttons = Buttons(self)
         self.free    = FreeGameWindow(self)
+        self.time    = TimeGameWindow(self)
 
         self.buttons.freeGameB.clicked.connect(self.change_to_free)
+        self.buttons.timeGameB.clicked.connect(self.change_to_time)
 
         self.stack_widget.addWidget(self.buttons)
         self.stack_widget.addWidget(self.free)
+        self.stack_widget.addWidget(self.time)
 
         self.layout.addWidget(self.stack_widget)
 
         self.setLayout(self.layout)
 
         self.change_to_buttons()
-
 
     def change_to_levels(self):
 
@@ -81,7 +83,8 @@ class ModeChangerWindow(GeneralWindow):
 
     def change_to_time(self):
         
-        pass
+        self.stack_widget.setCurrentIndex(2)
+        self.time.setFocusPolicy(True)
 
     def change_to_buttons(self):
 
@@ -90,4 +93,29 @@ class ModeChangerWindow(GeneralWindow):
 
     def change_to_main(self):
 
+        self.change_to_buttons()
+
+    def change_to_parent_class(self):
+
         self.parent_class.change_to_main()
+
+    def keyPressEvent(self, event):
+
+        if event.text() == '1':
+
+            self.change_to_levels()
+
+        elif event.text() == '2':
+
+            self.change_to_free()
+
+        elif event.text() == '3':
+
+            self.change_to_time()
+
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    window = ModeChangerWindow('dfs')
+    window.show()
+    sys.exit(app.exec_())
