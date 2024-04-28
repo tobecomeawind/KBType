@@ -6,6 +6,7 @@ from PyQt5 import QtCore
 from MainWidget import GeneralWindow
 from FreeGameWidget import FreeGameWindow
 from TimeGameWidget import TimeGameWindow
+from LevelGameWidget import LevelGameWindow
 
 class Buttons(GeneralWindow):
 
@@ -58,13 +59,16 @@ class ModeChangerWindow(GeneralWindow):
         self.buttons = Buttons(self)
         self.free    = FreeGameWindow(self)
         self.time    = TimeGameWindow(self)
+        self.levels  = LevelGameWindow(self)
 
         self.buttons.freeGameB.clicked.connect(self.change_to_free)
         self.buttons.timeGameB.clicked.connect(self.change_to_time)
+        self.buttons.levelsB.clicked.connect(self.change_to_levels)
 
         self.stack_widget.addWidget(self.buttons)
         self.stack_widget.addWidget(self.free)
         self.stack_widget.addWidget(self.time)
+        self.stack_widget.addWidget(self.levels)
 
         self.layout.addWidget(self.stack_widget)
 
@@ -74,7 +78,7 @@ class ModeChangerWindow(GeneralWindow):
 
     def change_to_levels(self):
 
-        pass
+        self.stack_widget.setCurrentIndex(3)
 
     def change_to_free(self):
 
@@ -113,9 +117,6 @@ class ModeChangerWindow(GeneralWindow):
 
             self.change_to_time()
 
+        if event.key() == QtCore.Qt.Key_Escape:
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = ModeChangerWindow('dfs')
-    window.show()
-    sys.exit(app.exec_())
+            self.parent_class.change_to_main()

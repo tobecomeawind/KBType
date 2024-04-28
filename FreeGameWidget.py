@@ -42,8 +42,8 @@ class FreeGameWindow(GeneralWindow):
 
     def put_language(self, lang):
 
-        if lang=='eng': self.typeline.load_file(file='levels/eng/ELarge.txt', random=True)
-        else:self.typeline.load_file(file='levels/ru/RLarge.txt', random=True)
+        if lang=='eng': self.typeline.load_file(file='levels/eng/ELarge.txt', random=True, max_counter=4)
+        else:self.typeline.load_file(file='levels/ru/RLarge.txt', random=True, max_counter=4)
         self.stack_widgets.setCurrentIndex(0)
 
     def change_to_main(self):

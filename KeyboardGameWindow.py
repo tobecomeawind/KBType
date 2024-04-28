@@ -32,7 +32,7 @@ class GeneralWindow(QWidget):
 
 class KeyboardGameWindow(GeneralWindow):
 
-    def __init__(self, parent_class=None, time=None, file=None, random=False):
+    def __init__(self, parent_class=None, time=None, file=None, random=False, max_counter=None):
 
         super().__init__()
 
@@ -40,7 +40,7 @@ class KeyboardGameWindow(GeneralWindow):
 
         self.stack_widgets = QStackedWidget()
 
-        self.typeLine = TypeLineWindow(self, time, file, random)
+        self.typeLine = TypeLineWindow(self, time, file, random, max_counter)
 
         self.time = time
 
@@ -75,12 +75,13 @@ class KeyboardGameWindow(GeneralWindow):
 
         self.parent_class.change_to_main()
 
-    def load_file(self, file, random=False):
+    def load_file(self, file, random=False, max_counter=None):
 
-        file, count_letters = self.typeLine.sentences.load(file, random)
+        file, count_letters = self.typeLine.sentences.load(file, random, max_counter=None)
         self.typeLine.file        = file
         self.typeLine.random      = random
         self.typeLine.len_letters = count_letters
+        self.typeLine.max_counter = max_counter
 
     def showEvent(self, event):
         
@@ -190,7 +191,7 @@ class PlotWindow(GeneralWindow):
 
 class TypeLineWindow(GeneralWindow):
 
-    def __init__(self, parent_class, time=None, file=None, random=False):
+    def __init__(self, parent_class, time=None, file=None, random=False, max_counter=None):
 
         super().__init__()
 
@@ -199,8 +200,9 @@ class TypeLineWindow(GeneralWindow):
         self.parent_class = parent_class
 
         self.sentences = LinkedSentence()
-        self.file, self.len_letters = self.sentences.load(file, random)
+        self.file, self.len_letters = self.sentences.load(file, random, max_counter=None)
         self.random = random
+        self.max_counter = max_counter
         
         if file:
 
@@ -307,6 +309,10 @@ class TypeLineWindow(GeneralWindow):
 
                 return
 
+            case QtCore.Qt.ShiftModifier:
+
+                return
+            
             case _:
 
                 key = event.text()
@@ -510,10 +516,10 @@ class TypeLineWindow(GeneralWindow):
 
         self.clearLayout()
 
-        print(self.random)
-
         self.sentences = LinkedSentence()
-        self.file, self.len_letters = self.sentences.load(self.file, self.random)
+        self.file, self.len_letters = self.sentences.load(self.file, self.random, max_counter=self.max_counter)
+
+        print(self.max_counter)
 
         self.current_sentence  = self.sentences.head
         self.current_word      = self.current_sentence.head
@@ -541,25 +547,4 @@ class TypeLineWindow(GeneralWindow):
         self.time_x.clear()
 
         self.start_layout()
-
-
-# app = QApplication([])
-
-# screen_rect = app.desktop().screenGeometry()
-# print(screen_rect.width(), screen_rect.height())
-
-# window = KeyboardGameWindow(time=4, file='level1.txt')
-
-
-# window.show()
-
-# app.exec_()
-
-
-
-
-
-
-
-
 

@@ -4,9 +4,14 @@ from random import choice
 
 class Text:
 
-    def _convert_to_lst(self, file, random):
+    def _convert_to_lst(self, file, random, max_counter=None):
 
         result = list()
+
+        print(max_counter) 
+
+        max_counter = max_counter if max_counter else 3
+
 
         with open(file, 'r') as file:
 
@@ -25,7 +30,7 @@ class Text:
                     intermediate_result.append(choice(lines).replace('\n', ''))
                     intermediate_result.append(" ")
 
-                    if counter == 2:
+                    if counter == max_counter:
 
                         result.append(intermediate_result.copy())
 
@@ -40,10 +45,11 @@ class Text:
 
                 print("---Word created---")
 
+                counter = 0
+                intermediate_result = list()
+
                 for line in lines:
 
-                    intermediate_result = list()
-                    
                     for word in line.split(' '):
 
                         word = word.replace('\n', '')
@@ -53,7 +59,14 @@ class Text:
                             intermediate_result.append(word)
                             intermediate_result.append(" ")
 
-                    result.append(intermediate_result)
+                            if counter == max_counter:
+
+                                result.append(intermediate_result.copy())
+                                intermediate_result.clear()
+                                counter = 0
+                                continue
+
+                            counter += 1
 
         file.close()
 
@@ -251,11 +264,11 @@ class LinkedSentence(Text):
 
         last_obj.next = obj
 
-    def load(self, file, random):
+    def load(self, file, random, max_counter):
 
         if file:
 
-            self.text, count_letters = super()._convert_to_lst(file, random)
+            self.text, count_letters = super()._convert_to_lst(file, random, max_counter)
 
             self.init_sentences()
 

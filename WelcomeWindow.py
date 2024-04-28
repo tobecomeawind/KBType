@@ -42,7 +42,7 @@ class MainMenu(GeneralWindow):
 
     def change_to_main(self):
 
-        self.change_to_modeChanger()
+        self.change_to_welcome()
 
 class WelcomeWindow(GeneralWindow):
 
@@ -55,6 +55,9 @@ class WelcomeWindow(GeneralWindow):
         self.layout = QVBoxLayout()
 
         self.logo_image = QPixmap("images/logo.jpg")
+        self.logo_image.scaledToHeight(600)
+        self.logo_image.scaledToWidth(600)
+
         self.logo_label = QLabel()
         self.logo_label.setPixmap(self.logo_image)
         self.logo_label.setAlignment(Qt.AlignCenter)
@@ -82,5 +85,5 @@ class WelcomeWindow(GeneralWindow):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = MainMenu()
-    window.show()
+    window.showFullScreen()
     sys.exit(app.exec_())

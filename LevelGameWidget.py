@@ -1,14 +1,14 @@
 from LanguageWidget import LanguageChanger
 from KeyboardGameWindow import KeyboardGameWindow
 from MainWidget import GeneralWindow
-from TimeChangerWidget import TimeChanger
+from LevelChangerWidget import LevelChangerWindow
 
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QStackedWidget, QHBoxLayout
 from PyQt5.QtCore import Qt
 from PyQt5 import QtCore
 
-class TimeGameWindow(GeneralWindow):
+class LevelGameWindow(GeneralWindow):
 
     def __init__(self, parent_class=None):
 
@@ -19,14 +19,12 @@ class TimeGameWindow(GeneralWindow):
         self.stack_widgets = QStackedWidget()
 
         self.typeline        = KeyboardGameWindow(self)
-        self.typeline.typeLine.check_game_with_time(1)
-
         self.languageChanger = LanguageChanger(self)
-        self.timeChanger     = TimeChanger(self) 
+        self.levelChanger    = LevelChangerWindow(self) 
 
         self.stack_widgets.addWidget(self.typeline)
         self.stack_widgets.addWidget(self.languageChanger)
-        self.stack_widgets.addWidget(self.timeChanger)
+        self.stack_widgets.addWidget(self.levelChanger)
 
         self.layout = QHBoxLayout()
         self.layout.addWidget(self.stack_widgets)
@@ -44,28 +42,25 @@ class TimeGameWindow(GeneralWindow):
         self.stack_widgets.setCurrentIndex(1)
         self.languageChanger.setFocusPolicy(True)
 
-    def change_to_timeChanger(self):
+    def change_to_levelChanger(self):
 
         self.stack_widgets.setCurrentIndex(2)
-        self.timeChanger.setFocusPolicy(True)
+        self.levelChanger.setFocusPolicy(True)
+
+    def put_level(self, file):
+
+        self.typeline.load_file(f'levels/{self.lang}/{file}.txt', max_counter=4 if '9' not in file else 1) 
+        self.change_to_typeline()
 
     def put_language(self, lang):
 
         self.lang = lang
-        self.change_to_timeChanger()
-    
-    def put_time(self, numb):
-
-        self.typeline.typeLine.total_time = numb 
-
-        if self.lang == 'eng': self.typeline.load_file(file='levels/eng/ELarge.txt', random=True)
-        else:self.typeline.load_file(file='levels/ru/RLarge.txt', random=True)
-
-        self.change_to_typeline()
+        self.levelChanger.connect_buttons(self.lang)
+        self.change_to_levelChanger()
 
     def change_to_main(self):
 
-        self.change_to_timeChanger()
+        self.change_to_levelChanger()
 
     def change_to_parent_class(self):
  
