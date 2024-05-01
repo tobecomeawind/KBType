@@ -8,10 +8,7 @@ class Text:
 
         result = list()
 
-        print(max_counter) 
-
-        max_counter = max_counter if max_counter else 3
-
+        max_counter = max_counter if isinstance(max_counter, int) else 3
 
         with open(file, 'r') as file:
 
@@ -21,7 +18,7 @@ class Text:
 
                 print("---Random words created---")
 
-                counter = 0
+                counter = 1
 
                 intermediate_result = list()
                 
@@ -36,7 +33,7 @@ class Text:
 
                         intermediate_result.clear()
 
-                        counter = 0
+                        counter = 1
                         continue 
 
                     counter += 1 
@@ -45,7 +42,7 @@ class Text:
 
                 print("---Word created---")
 
-                counter = 0
+                counter = 1
                 intermediate_result = list()
 
                 for line in lines:
@@ -63,7 +60,7 @@ class Text:
 
                                 result.append(intermediate_result.copy())
                                 intermediate_result.clear()
-                                counter = 0
+                                counter = 1
                                 continue
 
                             counter += 1
