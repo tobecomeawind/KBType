@@ -10,7 +10,7 @@ class Text:
 
         max_counter = max_counter if isinstance(max_counter, int) else 3
 
-        with open(file, 'r') as file:
+        with open(file, 'r', encoding='UTF-8') as file:
 
             lines = file.readlines()
 
