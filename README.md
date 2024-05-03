@@ -30,7 +30,7 @@ git clone https://github.com/tobecomeawind/KBType.git
 
 2. Install requirements:
 ```bash
-pip install requiremients.txt
+pip install -r requiremients.txt
 ```
 
 3. Run the game:
