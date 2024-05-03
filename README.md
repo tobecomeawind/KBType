@@ -25,7 +25,7 @@ To run this game, make sure you have Python 3.x installed on your system. You ca
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/KBType.git
+https://github.com/tobecomeawind/KBType.git
 ```
 
 2. Install requirements:
