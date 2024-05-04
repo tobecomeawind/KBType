@@ -16,10 +16,6 @@ KBType is a simple and fun game designed to help users improve their typing spee
 - Accuracy tracking
 - Simple and intuitive GUI built with PyQt5
 
-## Installation
-
-To run this game, make sure you have Python 3.x installed on your system. You can install the required dependencies using the following command:
-
 ## Usage
 ```
 
