@@ -1,5 +1,3 @@
-
-#GIF
 ![](https://github.com/tobecomeawind/KBType/blob/master/gifs/mygif.gif)
 ```markdown
 
