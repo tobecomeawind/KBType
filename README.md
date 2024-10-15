@@ -1,4 +1,8 @@
 ```markdown
+#GIF
+![](https://github.com/tobecomeawind/KBType/blob/master/gifs/mygif.gif)
+
+
 # KBType
 
 KBType is a typing speed test game developed in Python.
